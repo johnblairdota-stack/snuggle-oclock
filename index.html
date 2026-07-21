@@ -103,10 +103,12 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
-const camTarget = new THREE.Vector3(0.0, 1.1, 0.0);
-let camAz = 0.72, camPol = 0.95, camZoom = 1.0;   /* zoom is a multiplier on the auto-fit distance */
-/* the whole diorama's bounding box — plinth to wall tops */
-const SCENE_BOX = { x0:-2.6, x1:2.6, y0:-0.4, y1:2.95, z0:-2.15, z1:2.15 };
+const camTarget = new THREE.Vector3(0.0, 0.9, -0.5);
+let camAz = 1.05, camPol = 1.10, camZoom = 1.0;   /* zoom is a multiplier on the auto-fit distance */
+/* fit box covers the lived-in space (floor to just above the headboard),
+   not the full architectural shell — fitting literal wall-to-ceiling
+   made everything look tiny and off-centre on narrow phone screens */
+const SCENE_BOX = { x0:-2.3, x1:2.3, y0:0, y1:1.9, z0:-1.9, z1:0.85 };
 const _corners = [];
 for(const x of [SCENE_BOX.x0, SCENE_BOX.x1])
   for(const y of [SCENE_BOX.y0, SCENE_BOX.y1])
@@ -1402,7 +1404,6 @@ applyMode(modeOf(hour));
 snapPeople();
 const _sunV = new THREE.Vector3();
 
-let _loggedCamDebug = false;
 
 function tick(now){
   requestAnimationFrame(tick);
@@ -1533,18 +1534,6 @@ function tick(now){
   updateParticles(dt);
   updateWallFade(dt);
   updateCamera();
-  if(!_loggedCamDebug){
-    _loggedCamDebug = true;
-    const dbg = document.createElement('div');
-    dbg.style.cssText = 'position:fixed;top:2px;left:2px;right:2px;z-index:999;background:rgba(0,0,0,0.85);color:#8f8;font:9px monospace;padding:6px;border-radius:6px;line-height:1.4;';
-    dbg.textContent =
-      'W=' + window.innerWidth + ' H=' + window.innerHeight +
-      ' | canvasCSS=' + canvas.clientWidth + 'x' + canvas.clientHeight +
-      ' | dpr=' + window.devicePixelRatio.toFixed(2) +
-      ' | fov=' + camera.fov.toFixed(1) + ' aspect=' + camera.aspect.toFixed(3) +
-      ' | camPos=(' + camera.position.x.toFixed(1) + ',' + camera.position.y.toFixed(1) + ',' + camera.position.z.toFixed(1) + ')';
-    document.body.appendChild(dbg);
-  }
 
   clockTimeEl.textContent = fmtTime(hour);
   clockPhaseEl.textContent = 'Day '+day+' · '+phaseOf(hour) + (awayNow? ' ⏩' : '');
