@@ -1,7 +1,7 @@
 /* Snuggle O'Clock service worker.
-   TO PUSH AN UPDATE: bump the number in CACHE_VERSION below,
-   upload, then close & reopen the app. That's it. */
-const CACHE_VERSION = 'snuggle-v2';
+   HTML is fetched network-first so game updates appear immediately.
+   Models/icons/fonts are cache-first (big, rarely change). */
+const CACHE_VERSION = 'snuggle-v3';
 const PRECACHE = [
   './',
   './index.html',
@@ -27,21 +27,33 @@ self.addEventListener('activate', e => {
   );
 });
 
-/* cache-first, then network; successful network fetches get cached
-   (this also caches three.js and the font after first load, so the
-   app works fully offline afterwards) */
 self.addEventListener('fetch', e => {
   if(e.request.method !== 'GET') return;
-  e.respondWith(
-    caches.match(e.request).then(hit => {
-      if(hit) return hit;
-      return fetch(e.request).then(res => {
-        if(res && res.status === 200 && (res.type === 'basic' || res.type === 'cors')){
-          const clone = res.clone();
-          caches.open(CACHE_VERSION).then(c => c.put(e.request, clone));
-        }
+  const isDoc = e.request.mode === 'navigate' ||
+                e.request.destination === 'document' ||
+                e.request.url.endsWith('/index.html');
+  if(isDoc){
+    /* network-first: always try for the freshest game; fall back to cache offline */
+    e.respondWith(
+      fetch(e.request).then(res => {
+        const clone = res.clone();
+        caches.open(CACHE_VERSION).then(c => c.put(e.request, clone));
         return res;
-      });
-    })
-  );
+      }).catch(() => caches.match(e.request))
+    );
+  } else {
+    /* cache-first for everything else */
+    e.respondWith(
+      caches.match(e.request).then(hit => {
+        if(hit) return hit;
+        return fetch(e.request).then(res => {
+          if(res && res.status === 200 && (res.type === 'basic' || res.type === 'cors')){
+            const clone = res.clone();
+            caches.open(CACHE_VERSION).then(c => c.put(e.request, clone));
+          }
+          return res;
+        });
+      })
+    );
+  }
 });
