@@ -75,11 +75,11 @@
   <div id="clockChip">
     <div id="clockTime">6:00</div>
     <div id="clockPhase">Evening</div>
+    <div style="font-size:9px;color:#C9A88A;font-weight:700;margin-top:1px;">build v3-autofit</div>
   </div>
 </div>
 <div id="toast"></div>
 <div id="hint">Drag to spin the room · pinch or scroll to zoom</div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:rgba(255,250,240,0.5);z-index:8;font-weight:600;">v3-autofit</div>
 <div id="controls">
   <button class="btn" id="speedBtn">Speed 1×</button>
   <button class="btn" id="skipBtn">Skip to bedtime</button>
@@ -1402,6 +1402,8 @@ applyMode(modeOf(hour));
 snapPeople();
 const _sunV = new THREE.Vector3();
 
+let _loggedCamDebug = false;
+
 function tick(now){
   requestAnimationFrame(tick);
   const dt = Math.min(0.05, (now-last)/1000);
@@ -1531,6 +1533,18 @@ function tick(now){
   updateParticles(dt);
   updateWallFade(dt);
   updateCamera();
+  if(!_loggedCamDebug){
+    _loggedCamDebug = true;
+    const dbg = document.createElement('div');
+    dbg.style.cssText = 'position:fixed;top:2px;left:2px;right:2px;z-index:999;background:rgba(0,0,0,0.85);color:#8f8;font:9px monospace;padding:6px;border-radius:6px;line-height:1.4;';
+    dbg.textContent =
+      'W=' + window.innerWidth + ' H=' + window.innerHeight +
+      ' | canvasCSS=' + canvas.clientWidth + 'x' + canvas.clientHeight +
+      ' | dpr=' + window.devicePixelRatio.toFixed(2) +
+      ' | fov=' + camera.fov.toFixed(1) + ' aspect=' + camera.aspect.toFixed(3) +
+      ' | camPos=(' + camera.position.x.toFixed(1) + ',' + camera.position.y.toFixed(1) + ',' + camera.position.z.toFixed(1) + ')';
+    document.body.appendChild(dbg);
+  }
 
   clockTimeEl.textContent = fmtTime(hour);
   clockPhaseEl.textContent = 'Day '+day+' · '+phaseOf(hour) + (awayNow? ' ⏩' : '');
